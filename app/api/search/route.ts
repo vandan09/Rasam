@@ -1,0 +1,30 @@
+import { NextRequest, NextResponse } from "next/server"
+import { getFallbackKeywords } from "@/lib/mood-map"
+import { dedupeAndRankDishes, normalizeMenuItems } from "@/lib/search-utils"
+import { resolveAddressId, searchMenu } from "@/lib/swiggy"
+
+export async function POST(req: NextRequest) {
+  try {
+    const { keywords, addressId: provided, vegFilter, moodLabel } = await req.json()
+
+    const addressId = await resolveAddressId(provided)
+    const searchKeywords: string[] =
+      Array.isArray(keywords) && keywords.length > 0
+        ? keywords
+        : getFallbackKeywords(moodLabel)
+
+    const results = await Promise.all(
+      searchKeywords.map((keyword: string) =>
+        searchMenu({ addressId, query: keyword, vegFilter: vegFilter ?? 0 })
+      )
+    )
+
+    const allDishes = results.flatMap((r) => normalizeMenuItems(r))
+    const dishes = dedupeAndRankDishes(allDishes, 6)
+
+    return NextResponse.json({ dishes, addressId })
+  } catch (err) {
+    console.error("[/api/search]", err)
+    return NextResponse.json({ error: "Search failed" }, { status: 500 })
+  }
+}
