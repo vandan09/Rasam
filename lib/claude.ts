@@ -87,7 +87,11 @@ function getDemoMoodFromAnswers(answers: QuizAnswer[]): MoodResult {
   const comfort = answers.find((a) => a.questionId === "q4")?.answer ?? ""
   const day = answers.find((a) => a.questionId === "q2")?.answer ?? ""
 
-  if (comfort.includes("Pure comfort") || day.includes("Dumpster fire")) {
+  if (
+    comfort.includes("warm hug") ||
+    comfort.includes("side of guilt") ||
+    day.includes("dumpster fire")
+  ) {
     return {
       moodLabel: "Quietly unravelling",
       moodDescription: "You need something warm that asks nothing of you.",
@@ -96,7 +100,7 @@ function getDemoMoodFromAnswers(answers: QuizAnswer[]): MoodResult {
       emoji: "🌧️",
     }
   }
-  if (day.includes("Genuinely great")) {
+  if (day.includes("Main character") || day.includes("Weirdly okay")) {
     return {
       moodLabel: "Main character energy",
       moodDescription: "You earned something that slaps.",

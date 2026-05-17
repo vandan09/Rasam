@@ -2,17 +2,32 @@
 
 interface Props {
   question: string
+  subtitle?: string
+  stepLabel?: string
   options: string[]
   onSelect: (answer: string) => void
   selectedAnswer?: string
 }
 
-export default function QuestionCard({ question, options, onSelect, selectedAnswer }: Props) {
+export default function QuestionCard({
+  question,
+  subtitle,
+  stepLabel,
+  options,
+  onSelect,
+  selectedAnswer,
+}: Props) {
   return (
     <div className="mx-auto flex w-full max-w-md animate-fadeIn flex-col gap-6 px-4">
-      <h2 className="text-center text-2xl font-semibold leading-snug text-gray-900">
-        {question}
-      </h2>
+      {stepLabel && (
+        <p className="text-center text-xs font-semibold uppercase tracking-widest text-orange-500">
+          {stepLabel}
+        </p>
+      )}
+      <div className="text-center">
+        <h2 className="text-2xl font-semibold leading-snug text-gray-900">{question}</h2>
+        {subtitle && <p className="mt-2 text-sm leading-relaxed text-gray-400">{subtitle}</p>}
+      </div>
       <div className="flex flex-col gap-3">
         {options.map((option) => (
           <button

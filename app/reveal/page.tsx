@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import LoadingVibe from "@/components/ui/LoadingVibe"
 import MoodReveal from "@/components/ui/MoodReveal"
@@ -10,23 +10,29 @@ import { useQuizStore } from "@/store/quiz-store"
 
 export default function RevealPage() {
   const router = useRouter()
-  const storeMood = useQuizStore((s) => s.mood)
-  const { setMood, setDishes, setAppliedCoupon, setAddressId, addressId } = useQuizStore()
+  const setMood = useQuizStore((s) => s.setMood)
+  const { setDishes, setAppliedCoupon, setAddressId, addressId } = useQuizStore()
 
   const [mood, setLocalMood] = useState<MoodResult | null>(null)
   const [ready, setReady] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
+  const initialized = useRef(false)
 
   useEffect(() => {
-    const resolved = storeMood ?? loadMoodFromSession()
+    if (initialized.current) return
+    initialized.current = true
+
+    const fromStore = useQuizStore.getState().mood
+    const resolved = fromStore ?? loadMoodFromSession()
+
     if (resolved) {
-      if (!storeMood) setMood(resolved)
+      if (!fromStore) setMood(resolved)
       setLocalMood(resolved)
       setReady(true)
     } else {
       router.replace("/quiz")
     }
-  }, [storeMood, setMood, router])
+  }, [setMood, router])
 
   const handleShare = async () => {
     if (!mood) return

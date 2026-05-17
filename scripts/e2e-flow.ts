@@ -3,6 +3,8 @@
  * Requires dev server: npm run dev (in another terminal)
  */
 
+import { QUESTIONS } from "../lib/questions"
+
 async function resolveBase(): Promise<string> {
   const candidates = [
     process.env.TEST_BASE_URL,
@@ -23,20 +25,11 @@ async function resolveBase(): Promise<string> {
 
 let BASE = process.env.TEST_BASE_URL ?? "http://localhost:3000"
 
-const ANSWERS = [
-  { questionId: "q1", question: "Pick one without thinking:", answer: "Rain sounds" },
-  { questionId: "q2", question: "Rate your day honestly.", answer: "Meh, it existed" },
-  {
-    questionId: "q3",
-    question: "You have 20 free minutes. What are you doing?",
-    answer: "Lying down doing nothing",
-  },
-  {
-    questionId: "q4",
-    question: "Is this meal for comfort or fuel?",
-    answer: "Pure comfort",
-  },
-]
+const ANSWERS = QUESTIONS.map((q) => ({
+  questionId: q.id,
+  question: q.text,
+  answer: q.options[0],
+}))
 
 async function post(path: string, body: unknown) {
   const res = await fetch(`${BASE}${path}`, {

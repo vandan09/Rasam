@@ -1,3 +1,4 @@
+import { QUESTIONS } from "../lib/questions"
 import { interpretMood } from "../lib/claude"
 import { getAddresses, isSwiggyMockMode, searchMenu } from "../lib/swiggy"
 
@@ -18,17 +19,25 @@ async function main() {
 
   console.log("\n── Testing Claude: mood interpretation ──")
   const mood = await interpretMood([
-    { questionId: "q1", question: "Pick one without thinking:", answer: "Rain sounds" },
-    { questionId: "q2", question: "Rate your day honestly.", answer: "Meh, it existed" },
+    {
+      questionId: "q1",
+      question: QUESTIONS[0].text,
+      answer: QUESTIONS[0].options[0],
+    },
+    {
+      questionId: "q2",
+      question: QUESTIONS[1].text,
+      answer: QUESTIONS[1].options[1],
+    },
     {
       questionId: "q3",
-      question: "You have 20 free minutes. What are you doing?",
-      answer: "Lying down doing nothing",
+      question: QUESTIONS[2].text,
+      answer: QUESTIONS[2].options[0],
     },
     {
       questionId: "q4",
-      question: "Is this meal for comfort or fuel?",
-      answer: "Pure comfort",
+      question: QUESTIONS[3].text,
+      answer: QUESTIONS[3].options[0],
     },
   ])
   console.log("Mood result:", JSON.stringify(mood, null, 2))

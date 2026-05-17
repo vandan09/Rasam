@@ -98,6 +98,8 @@ export default function QuizPage() {
         <QuestionCard
           key={question.id}
           question={question.text}
+          subtitle={question.subtitle}
+          stepLabel={`Question ${step + 1} of ${QUESTIONS.length}`}
           options={[...question.options]}
           onSelect={handleSelect}
           selectedAnswer={answers.find((a) => a.questionId === question.id)?.answer}
