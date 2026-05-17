@@ -1,6 +1,7 @@
 "use client"
 
 import { create } from "zustand"
+import { clearMoodFromSession, saveMoodToSession } from "@/lib/session-mood"
 import type { Coupon, MoodResult, QuizAnswer, QuizState, SwiggyDish } from "@/lib/types"
 
 interface QuizStore extends QuizState {
@@ -34,7 +35,10 @@ const initialState: QuizState = {
 export const useQuizStore = create<QuizStore>((set) => ({
   ...initialState,
 
-  startQuiz: () => set({ ...initialState }),
+  startQuiz: () => {
+    clearMoodFromSession()
+    set({ ...initialState })
+  },
 
   setAnswer: (answer) =>
     set((s) => ({
@@ -43,7 +47,10 @@ export const useQuizStore = create<QuizStore>((set) => ({
 
   nextStep: () => set((s) => ({ currentStep: Math.min(s.currentStep + 1, 3) })),
   prevStep: () => set((s) => ({ currentStep: Math.max(0, s.currentStep - 1) })),
-  setMood: (mood) => set({ mood }),
+  setMood: (mood) => {
+    saveMoodToSession(mood)
+    set({ mood })
+  },
   setDishes: (dishes) => set({ dishes }),
   selectDish: (dish) => set({ selectedDish: dish }),
   setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
@@ -59,5 +66,8 @@ export const useQuizStore = create<QuizStore>((set) => ({
       orderPlaced: Boolean(orderId),
       orderId: orderId ?? null,
     }),
-  reset: () => set({ ...initialState }),
+  reset: () => {
+    clearMoodFromSession()
+    set({ ...initialState })
+  },
 }))

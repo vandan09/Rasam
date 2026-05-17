@@ -4,16 +4,29 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import LoadingVibe from "@/components/ui/LoadingVibe"
 import MoodReveal from "@/components/ui/MoodReveal"
+import { loadMoodFromSession } from "@/lib/session-mood"
+import type { MoodResult } from "@/lib/types"
 import { useQuizStore } from "@/store/quiz-store"
 
 export default function RevealPage() {
   const router = useRouter()
-  const { mood, setDishes, setAppliedCoupon, setAddressId, addressId } = useQuizStore()
+  const storeMood = useQuizStore((s) => s.mood)
+  const { setMood, setDishes, setAppliedCoupon, setAddressId, addressId } = useQuizStore()
+
+  const [mood, setLocalMood] = useState<MoodResult | null>(null)
+  const [ready, setReady] = useState(false)
   const [isFetching, setIsFetching] = useState(false)
 
   useEffect(() => {
-    if (!mood) router.push("/quiz")
-  }, [mood, router])
+    const resolved = storeMood ?? loadMoodFromSession()
+    if (resolved) {
+      if (!storeMood) setMood(resolved)
+      setLocalMood(resolved)
+      setReady(true)
+    } else {
+      router.replace("/quiz")
+    }
+  }, [storeMood, setMood, router])
 
   const handleShare = async () => {
     if (!mood) return
@@ -60,8 +73,8 @@ export default function RevealPage() {
     }
   }
 
+  if (!ready || !mood) return <LoadingVibe />
   if (isFetching) return <LoadingVibe />
-  if (!mood) return null
 
   return (
     <MoodReveal

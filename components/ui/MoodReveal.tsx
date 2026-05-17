@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import type { MoodResult } from "@/lib/types"
 
 interface Props {
@@ -11,27 +10,10 @@ interface Props {
 }
 
 export default function MoodReveal({ mood, onContinue, onShare, isLoading }: Props) {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 100)
-    return () => clearTimeout(t)
-  }, [])
-
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-6 text-center">
-      <div
-        className={`transition-all duration-700 ${
-          visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
-        }`}
-      >
-        <div
-          className={`mb-6 text-6xl transition-transform duration-500 ${
-            visible ? "scale-100" : "scale-0"
-          }`}
-        >
-          {mood.emoji}
-        </div>
+      <div>
+        <div className="mb-6 text-6xl">{mood.emoji}</div>
         <p className="mb-3 text-sm font-medium uppercase tracking-widest text-gray-400">
           You are
         </p>
@@ -43,12 +25,7 @@ export default function MoodReveal({ mood, onContinue, onShare, isLoading }: Pro
         </p>
       </div>
 
-      <div
-        className={`flex flex-col gap-3 transition-all duration-200 ${
-          visible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-        }`}
-        style={{ transitionDelay: "400ms" }}
-      >
+      <div className="flex flex-col gap-3">
         <button
           type="button"
           onClick={onContinue}

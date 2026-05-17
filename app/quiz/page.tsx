@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useLayoutEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import LoadingVibe from "@/components/ui/LoadingVibe"
 import ProgressDots from "@/components/ui/ProgressDots"
@@ -20,15 +20,10 @@ export default function QuizPage() {
     setAddressId,
     setRecentDishes,
     recentDishes,
-    startQuiz,
   } = useQuizStore()
 
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useLayoutEffect(() => {
-    startQuiz()
-  }, [startQuiz])
 
   useEffect(() => {
     const savedAddress = sessionStorage.getItem("rasam-address-id")
