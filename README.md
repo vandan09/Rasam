@@ -8,9 +8,15 @@ Rasam is a mood-to-food ordering engine built on [Swiggy's MCP platform](https:/
 
 ---
 
-## The Problem
+## Demo
 
-Every food app has a recommendation engine. None of them actually understand *why* you can't decide. Scroll paralysis isn't a menu problem — it's a mood problem. Rasam solves the feeling, not just the food.
+| | |
+|---|---|
+| **Live** | Deploy on Vercel — see [Deploy](#deploy-on-vercel) |
+| **GitHub** | [github.com/vandan09/Rasam](https://github.com/vandan09/Rasam) |
+| **Status** | All 4 phases implemented — add API keys for live Swiggy |
+
+---
 
 ## How It Works
 
@@ -28,14 +34,6 @@ Best coupon auto-applied
 One tap to order
 ```
 
-The magic moment: the AI names your mood accurately before showing any food. That's what people screenshot.
-
----
-
-## Status
-
-🚧 **Active development** — demo and live link coming soon.
-
 ---
 
 ## Tech Stack
@@ -44,25 +42,10 @@ The magic moment: the AI names your mood accurately before showing any food. Tha
 |---|---|
 | Framework | Next.js 14 (App Router, TypeScript) |
 | Styling | Tailwind CSS |
-| AI / Mood engine | Anthropic Claude Sonnet (`claude-sonnet-4-6`) |
+| AI / Mood engine | Anthropic Claude Sonnet |
 | Food APIs | Swiggy Food MCP server |
 | State | Zustand |
 | Deployment | Vercel |
-
----
-
-## Swiggy MCP APIs Used
-
-| Tool | Purpose |
-|---|---|
-| `get_addresses` | Fetch user delivery address |
-| `search_menu` | Search dishes by mood-derived keywords |
-| `search_restaurants` | Search restaurants by cuisine type |
-| `get_food_orders` | Fetch order history for personalisation |
-| `fetch_food_coupons` | Auto-fetch best available coupon |
-| `apply_food_coupon` | Apply coupon silently before checkout |
-| `update_food_cart` | Add selected dish to cart |
-| `place_food_order` | Place the order |
 
 ---
 
@@ -77,22 +60,21 @@ The magic moment: the AI names your mood accurately before showing any food. Tha
 ### Setup
 
 ```bash
-# Clone the repo
-git clone https://github.com/yourusername/rasam.git
-cd rasam
-
-# Install dependencies
+git clone https://github.com/vandan09/Rasam.git
+cd Rasam
 npm install
-
-# Set up environment variables
 cp .env.example .env.local
 # Fill in your API keys in .env.local
-
-# Run the development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+### Verify APIs (Phase 1)
+
+```bash
+npm run verify
+```
 
 ### Environment Variables
 
@@ -100,7 +82,20 @@ Open [http://localhost:3000](http://localhost:3000).
 ANTHROPIC_API_KEY=your_anthropic_key_here
 SWIGGY_MCP_API_KEY=your_swiggy_mcp_key_here
 SWIGGY_MCP_BASE_URL=https://mcp.swiggy.com/food
+
+# Mock Swiggy when key is missing (default: auto)
+USE_SWIGGY_MOCK=true
+
+# Real Swiggy orders — only when access is approved
+ENABLE_REAL_ORDERS=false
+
+NEXT_PUBLIC_DEMO_MODE=true
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 ```
+
+**Without keys:** the app runs in demo mode with mock dishes and deterministic mood labels. Safe for development and demo recording.
+
+**With Swiggy access:** set `USE_SWIGGY_MOCK=false` and add your key. Set `ENABLE_REAL_ORDERS=true` only when you intend to place real orders.
 
 ---
 
@@ -109,52 +104,39 @@ SWIGGY_MCP_BASE_URL=https://mcp.swiggy.com/food
 ```
 rasam/
 ├── app/
-│   ├── page.tsx              # Landing screen
+│   ├── page.tsx              # Landing
 │   ├── quiz/page.tsx         # 4-question mood quiz
-│   ├── reveal/page.tsx       # Mood reveal screen
-│   ├── results/page.tsx      # Food results + order
-│   └── api/
-│       ├── mood/route.ts     # Claude mood interpretation
-│       ├── search/route.ts   # Swiggy dish search
-│       ├── coupons/route.ts  # Coupon fetching
-│       ├── cart/route.ts     # Cart management
-│       ├── order/route.ts    # Order placement
-│       └── history/route.ts  # Order history
-├── components/
-│   └── ui/                   # QuestionCard, MoodReveal, DishCard, etc.
+│   ├── reveal/page.tsx       # Mood reveal + share
+│   ├── results/page.tsx      # Dishes + order
+│   └── api/                  # mood, search, coupons, cart, order, history
+├── components/ui/            # QuestionCard, MoodReveal, DishCard, etc.
 ├── lib/
-│   ├── swiggy.ts             # Swiggy MCP API client
-│   ├── claude.ts             # Anthropic SDK + mood prompt
-│   ├── questions.ts          # The 4 mood questions
-│   └── types.ts              # TypeScript interfaces
-└── store/
-    └── quiz-store.ts         # Zustand state
+│   ├── swiggy.ts             # Swiggy MCP client (+ mock mode)
+│   ├── claude.ts             # Mood interpretation
+│   ├── questions.ts          # Fixed quiz questions
+│   └── types.ts
+└── store/quiz-store.ts       # Zustand state
 ```
 
 ---
 
-## The Mood Questions
+## Deploy on Vercel
 
-Rasam never asks about food. It asks about everything else:
-
-- *"Pick one without thinking: rain sounds or total silence?"*
-- *"Rate your day honestly: dumpster fire / meh / actually decent / genuinely great"*
-- *"You have 20 free minutes. What are you doing?"*
-- *"Is this meal for comfort or fuel?"*
-
-Four answers. One mood. One order.
+1. Import [github.com/vandan09/Rasam](https://github.com/vandan09/Rasam) in Vercel
+2. Add environment variables from `.env.example`
+3. Deploy — `vercel --prod` or push to `main`
 
 ---
 
 ## Roadmap
 
-- [ ] Phase 1 — Project setup + API verification
-- [ ] Phase 2 — Core quiz → mood → food → order flow
-- [ ] Phase 3 — Order history personalisation + PWA + share card
-- [ ] Phase 4 — Demo prep + Vercel deployment
+- [x] Phase 1 — Project setup + API verification
+- [x] Phase 2 — Core quiz → mood → food → order flow
+- [x] Phase 3 — Order history personalisation + share + polish
+- [x] Phase 4 — Demo prep + deployment config
 
 ---
 
 ## Built By
 
-**Vandan** — Solo developer  
+**Vandan** — Solo developer
