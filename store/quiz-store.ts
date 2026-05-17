@@ -1,7 +1,7 @@
 "use client"
 
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 import type { Coupon, MoodResult, QuizAnswer, QuizState, SwiggyDish } from "@/lib/types"
 
 interface QuizStore extends QuizState {
@@ -50,10 +50,14 @@ export const useQuizStore = create<QuizStore>()(
       setAddressId: (id) => set({ addressId: id }),
       setRecentDishes: (dishes) => set({ recentDishes: dishes }),
       setOrderPlaced: (orderId) => set({ orderPlaced: true, orderId }),
-      reset: () => set(initialState),
+      reset: () => {
+        set(initialState)
+      },
     }),
     {
       name: "rasam-quiz",
+      storage: createJSONStorage(() => localStorage),
+      skipHydration: true,
       partialize: (s) => ({
         addressId: s.addressId,
         recentDishes: s.recentDishes,

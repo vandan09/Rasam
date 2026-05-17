@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Inter, Playfair_Display } from "next/font/google"
+import StoreHydrator from "@/components/StoreHydrator"
 import DemoBanner from "@/components/ui/DemoBanner"
 import "./globals.css"
 
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${inter.variable} ${playfair.variable} font-sans bg-[#FAFAF8] text-gray-900 antialiased`}
       >
+        <StoreHydrator />
         <DemoBanner />
         {children}
       </body>

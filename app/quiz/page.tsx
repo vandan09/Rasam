@@ -65,6 +65,7 @@ export default function QuizPage() {
       })
 
       const data = await res.json()
+      if (!res.ok && !data.mood) throw new Error("Mood request failed")
       if (!data.mood) throw new Error("No mood returned")
 
       setMood(data.mood)

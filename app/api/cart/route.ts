@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
+export { dynamic } from "@/lib/api-route"
 import { applyFoodCoupon, flushFoodCart, isSwiggyMockMode, updateFoodCart } from "@/lib/swiggy"
 
 export async function POST(req: NextRequest) {
   try {
     const { addressId, dish, couponCode } = await req.json()
+
+    if (!addressId || !dish?.itemId || !dish?.restaurantId) {
+      return NextResponse.json({ error: "Missing address or dish" }, { status: 400 })
+    }
 
     if (!isSwiggyMockMode()) {
       await flushFoodCart(addressId)

@@ -76,6 +76,13 @@ Open [http://localhost:3000](http://localhost:3000).
 npm run verify
 ```
 
+### Full flow test (requires dev server)
+
+```bash
+npm run dev          # terminal 1
+npm run test:e2e     # terminal 2 — tests all API routes end-to-end
+```
+
 ### Environment Variables
 
 ```env

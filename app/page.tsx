@@ -9,6 +9,7 @@ export default function Home() {
 
   const handleStart = () => {
     reset()
+    useQuizStore.persist.clearStorage()
     router.push("/quiz")
   }
 

@@ -5,21 +5,12 @@ import {
   MOCK_COUPON,
   MOCK_DISHES,
 } from "./mock-data"
+import { isRealOrdersEnabled, isSwiggyMockMode } from "./runtime"
+
+export { isSwiggyMockMode, isRealOrdersEnabled }
 
 const BASE_URL = process.env.SWIGGY_MCP_BASE_URL ?? "https://mcp.swiggy.com/food"
 const API_KEY = process.env.SWIGGY_MCP_API_KEY
-
-export function isSwiggyMockMode(): boolean {
-  return (
-    process.env.USE_SWIGGY_MOCK === "true" ||
-    !API_KEY ||
-    API_KEY === "your_swiggy_mcp_key_here"
-  )
-}
-
-export function isRealOrdersEnabled(): boolean {
-  return process.env.ENABLE_REAL_ORDERS === "true" && !isSwiggyMockMode()
-}
 
 async function swiggyCall(tool: string, args: Record<string, unknown>) {
   if (isSwiggyMockMode()) {
@@ -34,6 +25,10 @@ async function swiggyCall(tool: string, args: Record<string, unknown>) {
     },
     body: JSON.stringify({ tool, arguments: args }),
   })
+
+  if (!res.ok) {
+    throw new Error(`Swiggy HTTP ${res.status} on tool: ${tool}`)
+  }
 
   const data = await res.json()
 
@@ -50,10 +45,12 @@ function mockSwiggyCall(tool: string, args: Record<string, unknown>) {
       return MOCK_ADDRESSES
     case "search_menu": {
       const query = String(args.query ?? "")
-      const items = getMockDishesForKeywords([query]).map((d) => ({
+      const vegOnly = args.vegFilter === 1
+      let items = getMockDishesForKeywords([query]).map((d) => ({
         ...d,
         availabilityStatus: "OPEN",
       }))
+      if (vegOnly) items = items.filter((d) => d.isVeg)
       return { items }
     }
     case "search_restaurants":
@@ -158,7 +155,8 @@ export async function placeFoodOrder(addressId: string) {
   if (!isRealOrdersEnabled()) {
     return { orderId: `DEMO-${Date.now()}`, demo: true }
   }
-  return swiggyCall("place_food_order", { addressId })
+  const result = await swiggyCall("place_food_order", { addressId })
+  return { ...result, demo: false }
 }
 
 export async function getFoodOrders(args: {

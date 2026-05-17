@@ -28,11 +28,19 @@ export default function ResultsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [orderError, setOrderError] = useState<string | null>(null)
   const [isDemoOrder, setIsDemoOrder] = useState(true)
+  const [isDemoMode, setIsDemoMode] = useState(true)
   const [keywordIndex, setKeywordIndex] = useState(0)
 
   useEffect(() => {
     if (!mood) router.push("/quiz")
   }, [mood, router])
+
+  useEffect(() => {
+    fetch("/api/status")
+      .then((r) => r.json())
+      .then((s) => setIsDemoMode(Boolean(s.demoMode || s.mockSwiggy)))
+      .catch(() => {})
+  }, [])
 
   const handleSelectDish = (dish: SwiggyDish) => {
     selectDish(dish)
@@ -74,7 +82,7 @@ export default function ResultsPage() {
     setOrderError(null)
 
     try {
-      await fetch("/api/cart", {
+      const cartRes = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -83,6 +91,8 @@ export default function ResultsPage() {
           couponCode: appliedCoupon?.code ?? null,
         }),
       })
+      const cartData = await cartRes.json()
+      if (!cartRes.ok || !cartData.success) throw new Error("Cart failed")
 
       const res = await fetch("/api/order", {
         method: "POST",
@@ -90,7 +100,7 @@ export default function ResultsPage() {
         body: JSON.stringify({ addressId }),
       })
       const data = await res.json()
-      if (!data.success) throw new Error("Order failed")
+      if (!res.ok || !data.success) throw new Error("Order failed")
 
       setIsDemoOrder(Boolean(data.demo))
       setOrderPlaced(data.orderId)
@@ -120,7 +130,11 @@ export default function ResultsPage() {
         {orderId && <p className="font-mono text-xs text-gray-400">Order ID: {orderId}</p>}
         <button
           type="button"
-          onClick={() => router.push("/")}
+          onClick={() => {
+            useQuizStore.getState().reset()
+            useQuizStore.persist.clearStorage()
+            router.push("/")
+          }}
           className="mt-4 rounded-2xl bg-orange-500 px-8 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
         >
           Start over
@@ -179,7 +193,7 @@ export default function ResultsPage() {
           onConfirm={handleConfirmOrder}
           onCancel={() => setShowConfirm(false)}
           isLoading={isOrdering}
-          isDemo
+          isDemo={isDemoMode}
         />
       )}
 

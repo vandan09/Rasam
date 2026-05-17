@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+export { dynamic } from "@/lib/api-route"
 import { getFallbackKeywords } from "@/lib/mood-map"
 import { dedupeAndRankDishes, normalizeMenuItems } from "@/lib/search-utils"
 import { resolveAddressId, searchMenu } from "@/lib/swiggy"

@@ -37,8 +37,10 @@ export default function RevealPage() {
           moodLabel: mood.moodLabel,
         }),
       })
-      const { dishes, addressId: resolvedId } = await addrRes.json()
+      const searchData = await addrRes.json()
+      if (!addrRes.ok) throw new Error(searchData.error ?? "Search failed")
 
+      const { dishes, addressId: resolvedId } = searchData
       setDishes(dishes ?? [])
       if (resolvedId) setAddressId(resolvedId)
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+export { dynamic } from "@/lib/api-route"
 import { getAddresses, getFoodOrders } from "@/lib/swiggy"
 
 export async function GET() {

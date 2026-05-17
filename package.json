@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "verify": "tsx scripts/verify.ts"
+    "verify": "tsx scripts/verify.ts",
+    "test:e2e": "tsx scripts/e2e-flow.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

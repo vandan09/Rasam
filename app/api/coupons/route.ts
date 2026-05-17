@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+export { dynamic } from "@/lib/api-route"
 import { fetchFoodCoupons, resolveAddressId } from "@/lib/swiggy"
 
 export async function POST(req: NextRequest) {

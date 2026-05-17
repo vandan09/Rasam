@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+export { dynamic } from "@/lib/api-route"
+import { FALLBACK_MOOD } from "@/lib/mood-map"
 import { interpretMood } from "@/lib/claude"
 import type { QuizAnswer } from "@/lib/types"
 
@@ -16,6 +18,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ mood })
   } catch (err) {
     console.error("[/api/mood]", err)
-    return NextResponse.json({ error: "Mood interpretation failed" }, { status: 500 })
+    return NextResponse.json({ mood: FALLBACK_MOOD, fallback: true })
   }
 }
