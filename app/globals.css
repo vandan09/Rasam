@@ -12,3 +12,10 @@ body {
   background: var(--background);
   overflow-x: hidden;
 }
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f0f0f;
+    --foreground: #f3f4f6;
+  }
+}

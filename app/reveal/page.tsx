@@ -17,14 +17,9 @@ export default function RevealPage() {
 
   const handleShare = async () => {
     if (!mood) return
-    const text = `I'm "${mood.moodLabel}" right now.\n${mood.moodDescription}\n\nFind out yours → rasam.vercel.app`
-
-    if (navigator.share) {
-      await navigator.share({ text })
-    } else {
-      await navigator.clipboard.writeText(text)
-      alert("Copied to clipboard!")
-    }
+    const { shareMood } = await import("@/lib/share")
+    const result = await shareMood(mood)
+    if (result === "copied") alert("Copied to clipboard!")
   }
 
   const handleContinue = async () => {

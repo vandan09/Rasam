@@ -15,7 +15,9 @@ export default function ResultsPage() {
     selectedDish,
     appliedCoupon,
     addressId,
+    recentDishes,
     selectDish,
+    setDishes,
     setOrderPlaced,
     orderPlaced,
     orderId,
@@ -23,8 +25,10 @@ export default function ResultsPage() {
 
   const [showConfirm, setShowConfirm] = useState(false)
   const [isOrdering, setIsOrdering] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [orderError, setOrderError] = useState<string | null>(null)
   const [isDemoOrder, setIsDemoOrder] = useState(true)
+  const [keywordIndex, setKeywordIndex] = useState(0)
 
   useEffect(() => {
     if (!mood) router.push("/quiz")
@@ -33,6 +37,35 @@ export default function ResultsPage() {
   const handleSelectDish = (dish: SwiggyDish) => {
     selectDish(dish)
     setShowConfirm(true)
+  }
+
+  const dishMatchesHistory = (dishName: string) =>
+    recentDishes.some((d) => d.toLowerCase().includes(dishName.toLowerCase().split(" ")[0]))
+
+  const handleShowMore = async () => {
+    if (!mood || !addressId) return
+    const keywords = mood.dishKeywords
+    const nextIndex = (keywordIndex + 1) % Math.max(keywords.length, 1)
+    setKeywordIndex(nextIndex)
+    setIsRefreshing(true)
+
+    try {
+      const rotated = [...keywords.slice(nextIndex), ...keywords.slice(0, nextIndex)]
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keywords: rotated,
+          addressId,
+          vegFilter: mood.vegFilter,
+          moodLabel: mood.moodLabel,
+        }),
+      })
+      const data = await res.json()
+      if (data.dishes?.length) setDishes(data.dishes)
+    } finally {
+      setIsRefreshing(false)
+    }
   }
 
   const handleConfirmOrder = async () => {
@@ -115,13 +148,27 @@ export default function ResultsPage() {
       ) : (
         <div className="mx-auto flex w-full max-w-md flex-col gap-4">
           {dishes.slice(0, 3).map((dish) => (
-            <DishCard
-              key={dish.itemId}
-              dish={dish}
-              onSelect={handleSelectDish}
-              hasCoupon={!!appliedCoupon}
-            />
+            <div key={dish.itemId}>
+              {dishMatchesHistory(dish.name) && (
+                <p className="mb-1 text-xs font-medium text-orange-600">
+                  You always go for this when you&apos;re like this
+                </p>
+              )}
+              <DishCard
+                dish={dish}
+                onSelect={handleSelectDish}
+                hasCoupon={!!appliedCoupon}
+              />
+            </div>
           ))}
+          <button
+            type="button"
+            onClick={handleShowMore}
+            disabled={isRefreshing}
+            className="py-3 text-sm font-medium text-orange-500 transition-colors hover:text-orange-600 disabled:opacity-50"
+          >
+            {isRefreshing ? "Finding more..." : "Show me something else"}
+          </button>
         </div>
       )}
 
