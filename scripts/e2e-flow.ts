@@ -3,7 +3,25 @@
  * Requires dev server: npm run dev (in another terminal)
  */
 
-const BASE = process.env.TEST_BASE_URL ?? "http://localhost:3000"
+async function resolveBase(): Promise<string> {
+  const candidates = [
+    process.env.TEST_BASE_URL,
+    "http://localhost:3000",
+    "http://localhost:3001",
+  ].filter(Boolean) as string[]
+
+  for (const base of candidates) {
+    try {
+      const res = await fetch(`${base}/api/health`)
+      if (res.ok) return base
+    } catch {
+      /* try next */
+    }
+  }
+  throw new Error("No dev server found on :3000 or :3001 — run npm run dev first")
+}
+
+let BASE = process.env.TEST_BASE_URL ?? "http://localhost:3000"
 
 const ANSWERS = [
   { questionId: "q1", question: "Pick one without thinking:", answer: "Rain sounds" },
@@ -31,10 +49,8 @@ async function post(path: string, body: unknown) {
 }
 
 async function main() {
+  BASE = await resolveBase()
   console.log(`E2E against ${BASE}\n`)
-
-  const health = await fetch(`${BASE}/api/health`)
-  if (!health.ok) throw new Error("Health check failed — is dev server running?")
   console.log("✓ /api/health")
 
   const status = await (await fetch(`${BASE}/api/status`)).json()

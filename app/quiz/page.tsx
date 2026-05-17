@@ -22,10 +22,18 @@ export default function QuizPage() {
     recentDishes,
   } = useQuizStore()
   const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const question = QUESTIONS[currentStep]
-  const currentAnswer = answers.find((a) => a.questionId === question.id)?.answer
+  useEffect(() => {
+    useQuizStore.setState({ orderPlaced: false, orderId: null, selectedDish: null })
+  }, [])
+
+  useEffect(() => {
+    if (currentStep >= QUESTIONS.length) {
+      useQuizStore.setState({ currentStep: 0 })
+    }
+  }, [currentStep])
 
   useEffect(() => {
     fetch("/api/history")
@@ -37,19 +45,30 @@ export default function QuizPage() {
       .catch(() => {})
   }, [setRecentDishes, setAddressId])
 
+  const step = Math.min(currentStep, QUESTIONS.length - 1)
+  const question = QUESTIONS[step]
+  const currentAnswer = answers.find((a) => a.questionId === question?.id)?.answer
+
   const handleSelect = async (answer: string) => {
+    if (isSubmitting || isLoading || !question) return
+
     setAnswer({
       questionId: question.id,
       question: question.text,
       answer,
     })
 
-    if (currentStep < QUESTIONS.length - 1) {
-      setTimeout(() => nextStep(), 200)
+    if (step < QUESTIONS.length - 1) {
+      setIsSubmitting(true)
+      setTimeout(() => {
+        nextStep()
+        setIsSubmitting(false)
+      }, 200)
       return
     }
 
     setIsLoading(true)
+    setIsSubmitting(true)
     setError(null)
 
     try {
@@ -73,7 +92,13 @@ export default function QuizPage() {
     } catch {
       setError("Something went wrong reading your vibe. Try again.")
       setIsLoading(false)
+      setIsSubmitting(false)
     }
+  }
+
+  if (!question) {
+    router.replace("/")
+    return null
   }
 
   if (isLoading) return <LoadingVibe />
@@ -81,24 +106,26 @@ export default function QuizPage() {
   return (
     <main className="flex min-h-screen flex-col py-12">
       <div className="mb-10 px-4">
-        <ProgressDots total={QUESTIONS.length} current={currentStep} />
+        <ProgressDots total={QUESTIONS.length} current={step} />
       </div>
 
       <div className="flex flex-1 items-center">
         <QuestionCard
-          key={currentStep}
+          key={step}
           question={question.text}
           options={[...question.options]}
           onSelect={handleSelect}
           selectedAnswer={currentAnswer}
+          disabled={isSubmitting}
         />
       </div>
 
-      {currentStep > 0 && (
+      {step > 0 && (
         <button
           type="button"
           onClick={prevStep}
-          className="py-4 text-center text-sm text-gray-400 transition-colors hover:text-gray-600"
+          disabled={isSubmitting}
+          className="py-4 text-center text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
         >
           ← Back
         </button>

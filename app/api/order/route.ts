@@ -9,10 +9,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing addressId" }, { status: 400 })
     }
     const result = await placeFoodOrder(addressId)
-    const demo = isSwiggyMockMode() || !isRealOrdersEnabled()
+    const orderId = result?.orderId ?? null
+    const demo =
+      result?.demo === true || isSwiggyMockMode() || !isRealOrdersEnabled()
+
+    if (!orderId) {
+      return NextResponse.json({ error: "No order ID returned" }, { status: 502 })
+    }
 
     return NextResponse.json({
-      orderId: result?.orderId ?? null,
+      orderId,
       success: true,
       demo,
     })

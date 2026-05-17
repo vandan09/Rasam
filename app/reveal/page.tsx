@@ -20,6 +20,7 @@ export default function RevealPage() {
     const { shareMood } = await import("@/lib/share")
     const result = await shareMood(mood)
     if (result === "copied") alert("Copied to clipboard!")
+    if (result === "failed") alert("Could not share — try copying the link manually.")
   }
 
   const handleContinue = async () => {
@@ -62,5 +63,12 @@ export default function RevealPage() {
   if (isFetching) return <LoadingVibe />
   if (!mood) return null
 
-  return <MoodReveal mood={mood} onContinue={handleContinue} onShare={handleShare} />
+  return (
+    <MoodReveal
+      mood={mood}
+      onContinue={handleContinue}
+      onShare={handleShare}
+      isLoading={isFetching}
+    />
+  )
 }

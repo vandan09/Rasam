@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 export { dynamic } from "@/lib/api-route"
 import { getFallbackKeywords } from "@/lib/mood-map"
-import { dedupeAndRankDishes, normalizeMenuItems } from "@/lib/search-utils"
+import { dedupeAndRankDishes, filterByVeg, normalizeMenuItems } from "@/lib/search-utils"
 import { resolveAddressId, searchMenu } from "@/lib/swiggy"
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     )
 
     const allDishes = results.flatMap((r) => normalizeMenuItems(r))
-    const dishes = dedupeAndRankDishes(allDishes, 6)
+    const filtered = filterByVeg(allDishes, vegFilter ?? 0)
+    const dishes = dedupeAndRankDishes(filtered, 6)
 
     return NextResponse.json({ dishes, addressId })
   } catch (err) {

@@ -18,6 +18,7 @@ export default function ResultsPage() {
     recentDishes,
     selectDish,
     setDishes,
+    setAddressId,
     setOrderPlaced,
     orderPlaced,
     orderId,
@@ -35,6 +36,25 @@ export default function ResultsPage() {
     if (!mood) router.push("/quiz")
   }, [mood, router])
 
+  const fetchDishes = async (keywords: string[], veg: 0 | 1, label: string) => {
+    if (!mood) return
+    const res = await fetch("/api/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        keywords,
+        addressId: addressId ?? "__AUTO__",
+        vegFilter: veg,
+        moodLabel: label,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error ?? "Search failed")
+    if (data.addressId) setAddressId(data.addressId)
+    if (data.dishes?.length) setDishes(data.dishes)
+    return data.dishes as SwiggyDish[] | undefined
+  }
+
   useEffect(() => {
     fetch("/api/status")
       .then((r) => r.json())
@@ -47,11 +67,16 @@ export default function ResultsPage() {
     setShowConfirm(true)
   }
 
-  const dishMatchesHistory = (dishName: string) =>
-    recentDishes.some((d) => d.toLowerCase().includes(dishName.toLowerCase().split(" ")[0]))
+  const dishMatchesHistory = (dishName: string) => {
+    const name = dishName.toLowerCase()
+    return recentDishes.some((d) => {
+      const recent = d.toLowerCase()
+      return name.includes(recent) || recent.includes(name)
+    })
+  }
 
   const handleShowMore = async () => {
-    if (!mood || !addressId) return
+    if (!mood) return
     const keywords = mood.dishKeywords
     const nextIndex = (keywordIndex + 1) % Math.max(keywords.length, 1)
     setKeywordIndex(nextIndex)
@@ -59,18 +84,9 @@ export default function ResultsPage() {
 
     try {
       const rotated = [...keywords.slice(nextIndex), ...keywords.slice(0, nextIndex)]
-      const res = await fetch("/api/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keywords: rotated,
-          addressId,
-          vegFilter: mood.vegFilter,
-          moodLabel: mood.moodLabel,
-        }),
-      })
-      const data = await res.json()
-      if (data.dishes?.length) setDishes(data.dishes)
+      await fetchDishes(rotated, mood.vegFilter, mood.moodLabel)
+    } catch {
+      setOrderError("Could not load more dishes. Try again.")
     } finally {
       setIsRefreshing(false)
     }
@@ -100,7 +116,7 @@ export default function ResultsPage() {
         body: JSON.stringify({ addressId }),
       })
       const data = await res.json()
-      if (!res.ok || !data.success) throw new Error("Order failed")
+      if (!res.ok || !data.success || !data.orderId) throw new Error("Order failed")
 
       setIsDemoOrder(Boolean(data.demo))
       setOrderPlaced(data.orderId)
@@ -156,8 +172,28 @@ export default function ResultsPage() {
       )}
 
       {dishes.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center text-center text-gray-400">
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center text-gray-400">
           <p>Couldn&apos;t find dishes right now. Try again or open Swiggy directly.</p>
+          {mood && (
+            <button
+              type="button"
+              onClick={async () => {
+                setIsRefreshing(true)
+                setOrderError(null)
+                try {
+                  await fetchDishes(mood.dishKeywords, mood.vegFilter, mood.moodLabel)
+                } catch {
+                  setOrderError("Search failed. Check your connection.")
+                } finally {
+                  setIsRefreshing(false)
+                }
+              }}
+              disabled={isRefreshing}
+              className="rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
+            >
+              {isRefreshing ? "Searching..." : "Try again"}
+            </button>
+          )}
         </div>
       ) : (
         <div className="mx-auto flex w-full max-w-md flex-col gap-4">
@@ -191,13 +227,18 @@ export default function ResultsPage() {
           dish={selectedDish}
           coupon={appliedCoupon}
           onConfirm={handleConfirmOrder}
-          onCancel={() => setShowConfirm(false)}
+          onCancel={() => {
+            setShowConfirm(false)
+            setOrderError(null)
+          }}
           isLoading={isOrdering}
           isDemo={isDemoMode}
         />
       )}
 
-      {orderError && <p className="mt-3 text-center text-sm text-red-500">{orderError}</p>}
+      {!showConfirm && orderError && (
+        <p className="mt-3 text-center text-sm text-red-500">{orderError}</p>
+      )}
     </main>
   )
 }

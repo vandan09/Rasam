@@ -7,9 +7,10 @@ interface Props {
   mood: MoodResult
   onContinue: () => void
   onShare?: () => void
+  isLoading?: boolean
 }
 
-export default function MoodReveal({ mood, onContinue, onShare }: Props) {
+export default function MoodReveal({ mood, onContinue, onShare, isLoading }: Props) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -51,9 +52,10 @@ export default function MoodReveal({ mood, onContinue, onShare }: Props) {
         <button
           type="button"
           onClick={onContinue}
-          className="rounded-2xl bg-orange-500 px-10 py-4 text-base font-semibold text-white transition-all duration-200 hover:bg-orange-600 active:scale-95"
+          disabled={isLoading}
+          className="rounded-2xl bg-orange-500 px-10 py-4 text-base font-semibold text-white transition-all duration-200 hover:bg-orange-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Show me what to eat
+          {isLoading ? "Finding food..." : "Show me what to eat"}
         </button>
         {onShare && (
           <button

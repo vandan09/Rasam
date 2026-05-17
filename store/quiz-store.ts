@@ -49,7 +49,11 @@ export const useQuizStore = create<QuizStore>()(
       setAppliedCoupon: (coupon) => set({ appliedCoupon: coupon }),
       setAddressId: (id) => set({ addressId: id }),
       setRecentDishes: (dishes) => set({ recentDishes: dishes }),
-      setOrderPlaced: (orderId) => set({ orderPlaced: true, orderId }),
+      setOrderPlaced: (orderId) =>
+        set({
+          orderPlaced: Boolean(orderId),
+          orderId: orderId ?? null,
+        }),
       reset: () => {
         set(initialState)
       },

@@ -25,6 +25,11 @@ export function normalizeMenuItems(raw: unknown): SwiggyDish[] {
   return dishes.filter((d) => d.itemId && d.name)
 }
 
+export function filterByVeg(dishes: SwiggyDish[], vegFilter?: 0 | 1): SwiggyDish[] {
+  if (vegFilter !== 1) return dishes
+  return dishes.filter((d) => d.isVeg)
+}
+
 export function dedupeAndRankDishes(dishes: SwiggyDish[], limit = 6): SwiggyDish[] {
   const seen = new Set<string>()
   const unique: SwiggyDish[] = []
