@@ -5,11 +5,11 @@ import { useQuizStore } from "@/store/quiz-store"
 
 export default function Home() {
   const router = useRouter()
-  const reset = useQuizStore((s) => s.reset)
+  const startQuiz = useQuizStore((s) => s.startQuiz)
 
   const handleStart = () => {
-    reset()
-    useQuizStore.persist.clearStorage()
+    startQuiz()
+    sessionStorage.removeItem("rasam-address-id")
     router.push("/quiz")
   }
 

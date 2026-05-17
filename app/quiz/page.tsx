@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import LoadingVibe from "@/components/ui/LoadingVibe"
 import ProgressDots from "@/components/ui/ProgressDots"
@@ -20,22 +20,20 @@ export default function QuizPage() {
     setAddressId,
     setRecentDishes,
     recentDishes,
+    startQuiz,
   } = useQuizStore()
+
   const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    useQuizStore.setState({ orderPlaced: false, orderId: null, selectedDish: null })
-  }, [])
+  useLayoutEffect(() => {
+    startQuiz()
+  }, [startQuiz])
 
   useEffect(() => {
-    if (currentStep >= QUESTIONS.length) {
-      useQuizStore.setState({ currentStep: 0 })
-    }
-  }, [currentStep])
+    const savedAddress = sessionStorage.getItem("rasam-address-id")
+    if (savedAddress) setAddressId(savedAddress)
 
-  useEffect(() => {
     fetch("/api/history")
       .then((r) => r.json())
       .then(({ recentDishes: dishes, addressId }) => {
@@ -43,63 +41,55 @@ export default function QuizPage() {
         if (addressId) setAddressId(addressId)
       })
       .catch(() => {})
-  }, [setRecentDishes, setAddressId])
+  }, [setAddressId, setRecentDishes])
 
   const step = Math.min(currentStep, QUESTIONS.length - 1)
   const question = QUESTIONS[step]
-  const currentAnswer = answers.find((a) => a.questionId === question?.id)?.answer
 
-  const handleSelect = async (answer: string) => {
-    if (isSubmitting || isLoading || !question) return
+  const handleSelect = useCallback(
+    async (answer: string) => {
+      if (isLoading || !question) return
 
-    setAnswer({
-      questionId: question.id,
-      question: question.text,
-      answer,
-    })
-
-    if (step < QUESTIONS.length - 1) {
-      setIsSubmitting(true)
-      setTimeout(() => {
-        nextStep()
-        setIsSubmitting(false)
-      }, 200)
-      return
-    }
-
-    setIsLoading(true)
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const allAnswers = [
-        ...answers.filter((a) => a.questionId !== question.id),
-        { questionId: question.id, question: question.text, answer },
-      ]
-
-      const res = await fetch("/api/mood", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers: allAnswers, recentDishes }),
+      setError(null)
+      setAnswer({
+        questionId: question.id,
+        question: question.text,
+        answer,
       })
 
-      const data = await res.json()
-      if (!res.ok && !data.mood) throw new Error("Mood request failed")
-      if (!data.mood) throw new Error("No mood returned")
+      if (step < QUESTIONS.length - 1) {
+        nextStep()
+        return
+      }
 
-      setMood(data.mood)
-      router.push("/reveal")
-    } catch {
-      setError("Something went wrong reading your vibe. Try again.")
-      setIsLoading(false)
-      setIsSubmitting(false)
-    }
-  }
+      setIsLoading(true)
 
-  if (!question) {
-    router.replace("/")
-    return null
-  }
+      try {
+        const allAnswers = [
+          ...answers.filter((a) => a.questionId !== question.id),
+          { questionId: question.id, question: question.text, answer },
+        ]
+
+        const res = await fetch("/api/mood", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ answers: allAnswers, recentDishes }),
+        })
+
+        const data = await res.json()
+        if (!data.mood) throw new Error("No mood returned")
+
+        setMood(data.mood)
+        router.push("/reveal")
+      } catch {
+        setError("Something went wrong reading your vibe. Try again.")
+        setIsLoading(false)
+      }
+    },
+    [isLoading, question, step, answers, recentDishes, setAnswer, nextStep, setMood, router]
+  )
+
+  if (!question) return null
 
   if (isLoading) return <LoadingVibe />
 
@@ -109,14 +99,13 @@ export default function QuizPage() {
         <ProgressDots total={QUESTIONS.length} current={step} />
       </div>
 
-      <div className="flex flex-1 items-center">
+      <div className="relative z-10 flex flex-1 items-center">
         <QuestionCard
-          key={step}
+          key={question.id}
           question={question.text}
           options={[...question.options]}
           onSelect={handleSelect}
-          selectedAnswer={currentAnswer}
-          disabled={isSubmitting}
+          selectedAnswer={answers.find((a) => a.questionId === question.id)?.answer}
         />
       </div>
 
@@ -124,14 +113,15 @@ export default function QuizPage() {
         <button
           type="button"
           onClick={prevStep}
-          disabled={isSubmitting}
-          className="py-4 text-center text-sm text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
+          className="relative z-10 py-4 text-center text-sm text-gray-400 transition-colors hover:text-gray-600"
         >
           ← Back
         </button>
       )}
 
-      {error && <p className="px-4 pb-4 text-center text-sm text-red-500">{error}</p>}
+      {error && (
+        <p className="relative z-10 px-4 pb-4 text-center text-sm text-red-500">{error}</p>
+      )}
     </main>
   )
 }

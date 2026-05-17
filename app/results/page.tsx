@@ -148,7 +148,7 @@ export default function ResultsPage() {
           type="button"
           onClick={() => {
             useQuizStore.getState().reset()
-            useQuizStore.persist.clearStorage()
+            sessionStorage.removeItem("rasam-address-id")
             router.push("/")
           }}
           className="mt-4 rounded-2xl bg-orange-500 px-8 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
